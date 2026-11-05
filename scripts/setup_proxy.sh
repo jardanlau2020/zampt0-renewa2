@@ -343,8 +343,12 @@ MIHOMO_PY
             echo "      💀 ${NODE} 連唔到"
             continue
           fi
-          if probe_zampto --socks5-hostname 127.0.0.1:1080; then
-            echo "      ✅ 揀到乾淨住宅落地：${NODE}"
+          # 2026-11-05：冇 AUTH_COOKIE 時 probe 只會回 3（通但未登入 = Unauthorized）。
+          # 舊碼只認 0 → 26 條節點全被判「唔過」，明明 IP 冇被封。
+          _prc=0
+          probe_zampto --socks5-hostname 127.0.0.1:1080 || _prc=$?
+          if [ "$_prc" = "0" ] || { [ "$_prc" = "3" ] && [ -z "$AUTH_COOKIE" ]; }; then
+            echo "      ✅ 揀到乾淨住宅落地：${NODE}（probe rc=${_prc}）"
             USE_PROXY=1; CHOSEN_IP="mihomo:${NODE}"; break
           fi
           echo "      ✗ ${NODE} 唔過（換下一條）"
