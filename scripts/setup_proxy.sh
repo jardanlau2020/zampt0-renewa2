@@ -24,7 +24,10 @@ set -e
 
 # 兼容两个 secret 名: PROXY_URI 优先, TUIC_URI 兜底
 NODE_LINK="${PROXY_URI:-$TUIC_URI}"
-if [ -z "$NODE_LINK" ] && [ -z "$TUIC_URI" ]; then
+# 2026-11-05：原本只認 PROXY_URI/TUIC_URI，但有 ZAMPO_SUB_URL（cfnew 家宽訂閱、
+# mihomo 路線）嘅倉庫會被呢個閘門直接攔死 —— 明明訂閱可用都報「代理节点未配置」。
+# 02 號 repo 只配了 ZAMPO_SUB_URL，就是死在這裡（run 41978472040）。
+if [ -z "$NODE_LINK" ] && [ -z "$TUIC_URI" ] && [ -z "${ZAMPO_SUB_URL:-}" ]; then
   echo "[ERROR] 代理节点未配置! GitHub 裸 IP 会被 Cloudflare 风控(403), 续期必失败"
   echo "请到 Settings -> Secrets 添加 PROXY_URI (或兼容的 TUIC_URI), 支持格式:"
   echo "  hysteria2://password@host:port?sni=...&insecure=1"
